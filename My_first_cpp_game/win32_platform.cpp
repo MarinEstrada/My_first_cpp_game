@@ -9,6 +9,10 @@
 
 bool running = true;
 
+void* buffer_memory;
+int buffer_width;
+int buffer_height;
+
 
 //WNDPROC Wndproc;
 
@@ -23,6 +27,27 @@ LRESULT CALLBACK window_callback  (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		case WM_CLOSE:
 		case WM_DESTROY: {
 			running = false;
+		} break;
+
+		case WM_SIZE: {
+			RECT rect;
+			GetClientRect(hwnd, &rect);
+			buffer_width = rect.right - rect.left;
+			buffer_height = rect.bottom - rect.top;
+
+			//Buffer will be width * hight, enough to hold the color for each pixel!
+			// we will use 32 bits, & RGB format (1 byte per colour, & 1 byte having wasted space... thats okay... 4*8 bits = 32 bits
+
+			int buffer_size = buffer_width * buffer_height * sizeof(unsigned int);
+
+			// to reserve space on heap we usually use malloc. But here we are going to use more window specific func since we on OS integration layer
+			// buffer memory == void ptr
+
+			// NOTE: if ptr already has valid memory, free that memory before allocating new memory
+			if (buffer_memory) VirtualFree(buffer_memory, 0, MEM_RELEASE);
+			// allocating memory
+			buffer_memory = VirtualAlloc(0, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
 		} break;
 
 		default: {
