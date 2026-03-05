@@ -92,7 +92,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 		// Simulate
 
 		// Render	-> once memory has been allocated for window (in window_callback) need to use it, use device context (hdc var)
-		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is x0000
+		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is 0x0000
 		StretchDIBits(hdc, 0, 0, buffer_width, buffer_height, 0, 0, buffer_width, buffer_height, buffer_memory, &buffer_bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 
 
