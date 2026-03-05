@@ -12,6 +12,7 @@ bool running = true;
 void* buffer_memory;
 int buffer_width;
 int buffer_height;
+BITMAPINFO buffer_bitmap_info;
 
 
 //WNDPROC Wndproc;
@@ -48,6 +49,13 @@ LRESULT CALLBACK window_callback  (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			// allocating memory
 			buffer_memory = VirtualAlloc(0, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
+			buffer_bitmap_info.bmiHeader.biSize = sizeof(buffer_bitmap_info.bmiHeader);
+			buffer_bitmap_info.bmiHeader.biWidth = buffer_width;
+			buffer_bitmap_info.bmiHeader.biHeight = buffer_height;
+			buffer_bitmap_info.bmiHeader.biPlanes = 1; // why? mystery :eyes:
+			buffer_bitmap_info.bmiHeader.biBitCount = 32;
+			buffer_bitmap_info.bmiHeader.biCompression = BI_RGB;
+
 		} break;
 
 		default: {
@@ -70,6 +78,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 	//3) create the actual instance
 	HWND window = CreateWindow(window_class.lpszClassName, L"My First Game!", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, hInstance, 0);
 
+	HDC hdc = GetDC(window); // this is where we get the device context (ref windows use to draw to window)
+
 	while (running) {
 		// 3 parts to this
 		// Input
@@ -81,7 +91,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 
 		// Simulate
 
-		// Render	
+		// Render	-> once memory has been allocated for window (in window_callback) need to use it, use device context (hdc var)
+		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is x0000
+		StretchDIBits(hdc, 0, 0, buffer_width, buffer_height, 0, 0, buffer_width, buffer_height, buffer_memory, &buffer_bitmap_info, DIB_RGB_COLORS, SRCCOPY);
+
 
 	}
 
