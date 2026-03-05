@@ -89,7 +89,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 			DispatchMessage(&message);
 		}
 
-		// Simulate
+		// Simulate (eg color the pixels)
+		unsigned int* pixel = (unsigned int*)buffer_memory; //ptr to current pixel
+		for (int y = 0; y < buffer_height; y++) {
+			for (int x = 0; x < buffer_width; x++) {
+				//*pixel++ = 0xff5500; //this line assigned *pixel to 0xff5500, then afterwards it increments the ptr pixel by one
+				//*pixel++ = 0xff5500 * x + 0xff5500 * y;
+				//*pixel++ = (x + y) * 2;
+				*pixel++ = 0xff00ff * x + 0x00ff00 * y;
+			}
+		}
 
 		// Render	-> once memory has been allocated for window (in window_callback) need to use it, use device context (hdc var)
 		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is 0x0000
