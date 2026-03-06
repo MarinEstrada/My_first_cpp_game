@@ -20,5 +20,11 @@ void clear_screen(unsigned int color) {
 }
 
 void draw_rect(int x0, int y0, int x1, int y1, unsigned int color) {
-
+	for (int y = y0; y < y1; y++) {
+		// do y*width bc we want to up by the size of a row, remember mem basciallly an array
+		unsigned int* pixel = (unsigned int*)render_state.memory + x0 + y*render_state.width;
+		for (int x = x0; x < x1; x++) {
+			*pixel++ = color;
+		}
+	}
 }
