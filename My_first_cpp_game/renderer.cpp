@@ -40,11 +40,24 @@ static void draw_rect_in_pixels(int x0, int y0, int x1, int y1, uint32 color) {
 //want to make render pixel independent
 static void draw_rect(float x, float y, float half_size_x, float half_size_y, uint32 color) {
 
-	//multiply the 4 var by EITHER screen width or height to make box relative to the height or width of the screen! (with 1 = 1 width or height)
-	x *= render_state.height * render_scale;
-	y *= render_state.height * render_scale;
-	half_size_x *= render_state.height * render_scale;
-	half_size_y *= render_state.height * render_scale;
+	// multiply the 4 var by EITHER screen width or height to make box relative to the height or width of the screen! (with 1 = 1 width or height)
+	// But... we can also use aspect ratio width:height! check if taller or wider than 16:9 (standard widescreen)
+	// if taller, use width to make items size relative to width
+	// if wider, use height to make items size relative to height
+
+	float standard_widescreen = 16.0 / 9.0;
+	float current_ratio = (float)render_state.width / (float)render_state.height;
+
+	int relative_to;
+
+	if (current_ratio > standard_widescreen) relative_to = render_state.height;
+	else relative_to = render_state.width;
+
+
+	x *= relative_to * render_scale;
+	y *= relative_to * render_scale;
+	half_size_x *= relative_to * render_scale;
+	half_size_y *= relative_to * render_scale;
 
 	x += render_state.width / 2.f; // center x using width
 	y += render_state.height / 2.f; // center y using height
