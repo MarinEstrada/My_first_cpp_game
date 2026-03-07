@@ -97,7 +97,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 		// called in diff file -> do unity build
 		//render_background();
 		clear_screen(0x00009f);
-		draw_rect(50, 50, 200, 350, 0xff5522);
+		draw_rect(0, 0, 20, 20, 0xff5522);
+		draw_rect(50, 20, 25, 3, 0x0088fe);
+		draw_rect(-45, -15, 7, 20, 0x335544);
 
 		// Render	-> once memory has been allocated for window (in window_callback) need to use it, use device context (hdc var)
 		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is 0x0000
