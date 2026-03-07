@@ -3,10 +3,11 @@
 // use wnmain msdn
 
 //note.. for some reason this project is being built with uniqocde instead of ANSI 
+#include "utils.cpp"
 #include <windows.h>
 #include <iostream>
 
-bool running = true;
+static bool running = true;
 
 struct Render_State {
 	int height, width;
@@ -14,7 +15,7 @@ struct Render_State {
 	BITMAPINFO bitmap_info;
 };
 
-Render_State render_state;
+static Render_State render_state;
 #include "renderer.cpp" // including renderer file after render_state so that renderer file can use it, this is bc unity build
 
 //WNDPROC Wndproc;
@@ -41,7 +42,7 @@ LRESULT CALLBACK window_callback  (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			//Buffer will be width * hight, enough to hold the color for each pixel!
 			// we will use 32 bits, & RGB format (1 byte per colour, & 1 byte having wasted space... thats okay... 4*8 bits = 32 bits
 
-			int buffer_size = render_state.width * render_state.height * sizeof(unsigned int);
+			int buffer_size = render_state.width * render_state.height * sizeof(uint32);
 
 			// to reserve space on heap we usually use malloc. But here we are going to use more window specific func since we on OS integration layer
 			// buffer memory == void ptr
@@ -69,6 +70,7 @@ LRESULT CALLBACK window_callback  (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine, int nShowCmd) {
+//int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR lpCmdLine, _In_ int nShowCmd) {
 	// we want to draw a window, 3 things needed
 	//1) Create a window class
 	WNDCLASS window_class = {}; // starts out empty

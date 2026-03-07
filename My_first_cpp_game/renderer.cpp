@@ -11,8 +11,8 @@
 //}
 
 
-void clear_screen(unsigned int color) {
-	unsigned int* pixel = (unsigned int*)render_state.memory;
+static void clear_screen(uint32 color) {
+	uint32* pixel = (uint32*)render_state.memory;
 	for (int y = 0; y < render_state.height; y++) {
 		for (int x = 0; x < render_state.width; x++) {
 			*pixel++ = color;
@@ -20,10 +20,16 @@ void clear_screen(unsigned int color) {
 	}
 }
 
-void draw_rect(int x0, int y0, int x1, int y1, unsigned int color) {
+static void draw_rect_in_pixels(int x0, int y0, int x1, int y1, uint32 color) {
+
+	x0 = clamp(0, x0, render_state.width);
+	x1 = clamp(0, x1, render_state.width);
+	y0 = clamp(0, y0, render_state.height);
+	y1 = clamp(0, y1, render_state.height);
+
 	for (int y = y0; y < y1; y++) {
 		// do y*width bc we want to up by the size of a row, remember mem basciallly an array
-		unsigned int* pixel = (unsigned int*)render_state.memory + x0 + y*render_state.width;
+		uint32* pixel = (uint32*)render_state.memory + x0 + y*render_state.width;
 		for (int x = x0; x < x1; x++) {
 			*pixel++ = color;
 		}
