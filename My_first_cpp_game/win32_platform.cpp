@@ -18,6 +18,16 @@ struct Render_State {
 static Render_State render_state;
 #include "platform_common.cpp"
 #include "renderer.cpp" // including renderer file after render_state so that renderer file can use it, this is bc unity build
+#include "game.cpp"
+
+// macros bassically just replace text
+//macro: part of a switch case
+#define process_button(b, vk)\
+case vk: {\
+input.buttons[b].is_down = is_down; \
+input.buttons[b].has_changed = true; \
+break;\
+}
 
 //WNDPROC Wndproc;
 
@@ -109,26 +119,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 
 					// for button want to check 2 things: is button up or down? Has button changed state?
 					switch (vk_code) {
-						case VK_UP: {
-							input.buttons[BUTTON_UP].is_down = is_down;
-							input.buttons[BUTTON_UP].has_changed = true;
-							break;
-						} 
-						case VK_DOWN: {
-							input.buttons[BUTTON_DOWN].is_down = is_down;
-							input.buttons[BUTTON_DOWN].has_changed = true;
-							break;
-						}
-						case VK_LEFT: {
-							input.buttons[BUTTON_LEFT].is_down = is_down;
-							input.buttons[BUTTON_LEFT].has_changed = true;
-							break;
-						}
-						case VK_RIGHT: {
-							input.buttons[BUTTON_RIGHT].is_down = is_down;
-							input.buttons[BUTTON_RIGHT].has_changed = true;
-							break;
-						}
+						process_button(BUTTON_UP, VK_UP);
+						process_button(BUTTON_DOWN, VK_DOWN);
+						process_button(BUTTON_RIGHT, VK_RIGHT);
+						process_button(BUTTON_LEFT, VK_LEFT);
 
 						default: 
 							break;
@@ -148,14 +142,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 
 		// Simulate (eg color the pixels)
 		// called in diff file -> do unity build
-		//render_background();
-		clear_screen(0x00009f);
-		if (input.buttons[BUTTON_UP].is_down)
-			draw_rect(0, 0, 20, 20, 0xff5522);
-		if (input.buttons[BUTTON_RIGHT].is_down)
-			draw_rect(50, 20, 25, 3, 0x0088fe);
-		if (input.buttons[BUTTON_LEFT].is_down)
-			draw_rect(-45, -15, 7, 20, 0x335544);
+		simulate_game(&input);
 
 		// Render	-> once memory has been allocated for window (in window_callback) need to use it, use device context (hdc var)
 		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is 0x0000
