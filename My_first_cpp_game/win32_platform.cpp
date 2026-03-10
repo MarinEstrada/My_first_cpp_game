@@ -135,6 +135,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 						process_button(BUTTON_DOWN, VK_DOWN);
 						process_button(BUTTON_RIGHT, VK_RIGHT);
 						process_button(BUTTON_LEFT, VK_LEFT);
+						process_button(BUTTON_SHIFT, VK_SHIFT);
+						process_button(BUTTON_CTRL, VK_CONTROL);
 
 						default: 
 							break;

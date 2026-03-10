@@ -5,11 +5,16 @@
 //float player_pos = 0.f;
 float x_player_pos = 0.f;
 float y_player_pos = 0.f;
-float movement_speed = 50.f; // units per second... need to make it units per frame (u/f = (u/s)*(s/f))
 
 static void simulate_game(Input* input, float delta_time) {
 		//render_background();
 		clear_screen(0x00009f);
+
+		float movement_speed = 50.f; // units per second... need to make it units per frame (u/f = (u/s)*(s/f))
+		// if shift button, increase speed, if ctrl, decrease speed.
+		if (pressed(BUTTON_SHIFT)) movement_speed *= 1.5f;
+		if (pressed(BUTTON_CTRL)) movement_speed *= 0.5f;
+
 		if (pressed(BUTTON_UP)) x_player_pos += movement_speed * delta_time;
 		if (pressed(BUTTON_DOWN)) x_player_pos -= movement_speed * delta_time;
 		if (pressed(BUTTON_RIGHT)) y_player_pos += movement_speed * delta_time;
