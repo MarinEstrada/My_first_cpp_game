@@ -98,6 +98,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 	//input struct in platform_common file
 	Input input = {};
 
+	// how much time elapsed in one frame? Assume for first frame 60fps o 0.016666 s/f
+	float delta_time = 0.016666f;
+	LARGE_INTEGER frame_begin_time;
+	QueryPerformanceCounter(&frame_begin_time); //function that accepts a pointer, get time at start of frame
+
+	float performance_frequency;
+	{
+		LARGE_INTEGER perf;
+		QueryPerformanceFrequency(&perf); //returns how many cycles computer runs in one second
+		performance_frequency = (float)perf.QuadPart;
+	}
+
 	while (running) {
 		// 3 parts to this
 		// Input
@@ -142,13 +154,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 
 		// Simulate (eg color the pixels)
 		// called in diff file -> do unity build
-		simulate_game(&input);
+		simulate_game(&input, delta_time);
 
 		// Render	-> once memory has been allocated for window (in window_callback) need to use it, use device context (hdc var)
 		// if rendering with allocated mem without change, will be black screen! Because each pixel of allocated memory is 0x0000
 		StretchDIBits(hdc, 0, 0, render_state.width, render_state.height, 0, 0, render_state.width, render_state.height, render_state.memory, &render_state.bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 
-
+		LARGE_INTEGER frame_end_time;
+		QueryPerformanceCounter(&frame_end_time); //get time at end of frame
+		delta_time = (float)(frame_end_time.QuadPart - frame_begin_time.QuadPart) / performance_frequency; // calc new delta time, which is seconds / frame
+		frame_begin_time = frame_end_time; //update begin_time for next frame calc
 	}
 
 	return 0;
