@@ -11,6 +11,9 @@ enum {
 	BUTTON_SHIFT,
 	BUTTON_CTRL,
 
+	BUTTON_W,
+	BUTTON_S,
+
 	BUTTON_COUNT,
 };
 

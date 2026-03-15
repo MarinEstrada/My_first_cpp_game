@@ -24,8 +24,8 @@ static Render_State render_state;
 //macro: part of a switch case
 #define process_button(b, vk)\
 case vk: {\
+input.buttons[b].has_changed = is_down != input.buttons[b].is_down; \
 input.buttons[b].is_down = is_down; \
-input.buttons[b].has_changed = true; \
 break;\
 }
 
@@ -137,6 +137,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 						process_button(BUTTON_LEFT, VK_LEFT);
 						process_button(BUTTON_SHIFT, VK_SHIFT);
 						process_button(BUTTON_CTRL, VK_CONTROL);
+						process_button(BUTTON_W, 'W');
+						process_button(BUTTON_S, 'S');
 
 						default: 
 							break;
