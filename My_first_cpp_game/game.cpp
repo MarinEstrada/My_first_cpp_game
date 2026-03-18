@@ -12,25 +12,18 @@ float paddle2_pos = 0.f;
 float paddle1_speed, paddle2_speed;
 //float movement_speed = 50.f; // units per second... need to make it units per frame (u/f = (u/s)*(s/f))
 
-//static void get_paddle_pos(Input* input, float delta_time, float* paddle_pos,float* paddle_speed) {
-//		//is added to velocity the longer it is held, is derivative of velocit == derivative of deriviative of position
-//		float movement_accel = 0.f;
-//		if (is_down(BUTTON_UP)) movement_accel += 2000;
-//		if (is_down(BUTTON_DOWN)) movement_accel -= 2000;
-//
-//		// some natural friction
-//		movement_accel -= *paddle_speed * 10.f;
-//
-//		//use equation of movement to find new position using derivative of position & derivative of derivative of position
-//		*paddle_pos = *paddle_pos + *paddle_speed * delta_time + movement_accel * delta_time * delta_time * .5f;
-//		*paddle_speed = *paddle_speed + movement_accel * delta_time;
-//
-//}
+float arena_half_size_x = 85;
+float arena_half_size_y = 45;
+
+float paddle_half_size_x = 2.5;
+float paddle_half_size_y = 12;
+
+float collision_speed_modifier = 0.25f;
 
 static void simulate_game(Input* input, float delta_time) {
 		//render_background();
 		clear_screen(0x00009f);
-		draw_rect(0, 0, 85, 45, 0xffaa33); //Arena
+		draw_rect(0, 0, arena_half_size_x, arena_half_size_y, 0xffaa33); //Arena
 
 		//// if shift button, increase speed, if ctrl, decrease speed.
 		//if (is_down(BUTTON_SHIFT)) movement_speed *= 1.5f;
@@ -57,13 +50,35 @@ static void simulate_game(Input* input, float delta_time) {
 		paddle1_pos = paddle1_pos + paddle1_speed * delta_time + paddle1_accel * delta_time * delta_time * .5f;
 		paddle1_speed = paddle1_speed + paddle1_accel * delta_time;
 
+
 		paddle2_pos = paddle2_pos + paddle2_speed * delta_time + paddle2_accel * delta_time * delta_time * .5f;
 		paddle2_speed = paddle2_speed + paddle2_accel * delta_time;
 		// -----
+		// ADD COLLISION
+		// if paddles hit boundary, stop paddles
+		//Paddle 1
+		if (paddle1_pos + paddle_half_size_y > arena_half_size_y) {
+			paddle1_pos = arena_half_size_y - paddle_half_size_y;
+			paddle1_speed *= - collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
+		}
+		else if (paddle1_pos - paddle_half_size_y < -arena_half_size_y) { // do colliison for going down as well
+			paddle1_pos = -arena_half_size_y + paddle_half_size_y;
+			paddle1_speed *= -collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
+		}
+		//Paddle 2
+		if (paddle2_pos + paddle_half_size_y > arena_half_size_y) {
+			paddle2_pos = arena_half_size_y - paddle_half_size_y;
+			paddle2_speed *= -collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
+		}
+		else if (paddle2_pos - paddle_half_size_y < -arena_half_size_y) { // do colliison for going down as well
+			paddle2_pos = -arena_half_size_y + paddle_half_size_y;
+			paddle2_speed *= -collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
+		}
+
 
 
 		draw_rect(y_player_pos, x_player_pos, 1, 1, 0xa000a0); // player
-		draw_rect(-80, paddle1_pos, 2.5, 12, 0xff0000); // paddle 1
-		draw_rect(80, paddle2_pos, 2.5, 12, 0x0000ff); // paddle 2
+		draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+		draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
 
  }
