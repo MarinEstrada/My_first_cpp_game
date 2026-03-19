@@ -35,20 +35,20 @@ float speed_increase_modifier = 1.1;
 //	return true;
 //}
 
-void initialize_ball(float x_speed_modifer = 1, float y_speed_modifer = 0) {
+static void initialize_ball(float x_speed_modifer = 1, float y_speed_modifer = 0) {
 	ball_x_pos = 0; 
 	ball_y_pos = 0;
 	ball_x_speed = initial_speed * x_speed_modifer;
 	ball_y_speed = initial_speed * y_speed_modifer;
 }
 
-void initialize_game(float x_speed_modifer = 1, float y_speed_modifer = 0) {
+static void initialize_game(float x_speed_modifer = 1, float y_speed_modifer = 0) {
 	paddle1_pos = 0;
 	paddle2_pos = 0;
 	initialize_ball(x_speed_modifer, y_speed_modifer);
 }
 
-bool in_paddle_range(int paddle_num) {
+static bool in_paddle_range(int paddle_num) {
 
 	//float *paddle_pos;
 	float paddle_pos, x_pos;
@@ -80,66 +80,59 @@ bool in_paddle_range(int paddle_num) {
 	return true;
 }
 
+//get paddle position
+static void simulate_paddle(float *position, float* speed, float accel, float delta_time) {
+
+	// some natural friction to paddle
+	accel -= *speed * 10.f;
+
+	//use equation of movement to find new position using derivative of position & derivative of derivative of position
+	*position = *position + *speed * delta_time + accel * delta_time * delta_time * .5f;
+	*speed = *speed + accel * delta_time;
+
+	// ADD COLLISION TO PADDLES AND CEILING/FLOOR
+	// if paddle hit areana boundary, stop paddle
+	if (*position + paddle_half_size_y > arena_half_size_y) {
+		*position = arena_half_size_y - paddle_half_size_y;
+		*speed *= - wall_collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
+	}
+	else if (*position - paddle_half_size_y < -arena_half_size_y) { // do colliison for going down as well
+		*position = -arena_half_size_y + paddle_half_size_y;
+		*speed *= -wall_collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
+	}
+
+}
+
 static void simulate_game(Input* input, float delta_time) {
-		//render_background();
-		clear_screen(0x00009f);
-		draw_rect(0, 0, arena_half_size_x, arena_half_size_y, 0xffaa33); //Arena
+	//render_background();
+	clear_screen(0x00009f);
+	draw_rect(0, 0, arena_half_size_x, arena_half_size_y, 0xffaa33); //Arena
 
-		//// if shift button, increase speed, if ctrl, decrease speed.
-		//if (is_down(BUTTON_SHIFT)) movement_speed *= 1.5f;
-		//if (is_down(BUTTON_CTRL)) movement_speed *= 0.5f;
+	//// if shift button, increase speed, if ctrl, decrease speed.
+	//if (is_down(BUTTON_SHIFT)) movement_speed *= 1.5f;
+	//if (is_down(BUTTON_CTRL)) movement_speed *= 0.5f;
 
-		// -----
-		// GET BUTTON INPUTS
-		//is added to velocity the longer it is held, is derivative of velocit == derivative of deriviative of position
-		float paddle1_accel = 0.f;
-		if (is_down(BUTTON_W)) paddle1_accel += 2000;
-		if (is_down(BUTTON_S)) paddle1_accel -= 2000;
+	// -----
+	// GET BUTTON INPUTS
+	//is added to velocity the longer it is held, is derivative of velocit == derivative of deriviative of position
+	float paddle1_accel = 0.f;
+	if (is_down(BUTTON_W)) paddle1_accel += 2000;
+	if (is_down(BUTTON_S)) paddle1_accel -= 2000;
 
-		float paddle2_accel = 0.f;
-		if (is_down(BUTTON_UP)) paddle2_accel += 2000;
-		if (is_down(BUTTON_DOWN)) paddle2_accel -= 2000;
-		// -----
-		// GET POSITION 
+	float paddle2_accel = 0.f;
+	if (is_down(BUTTON_UP)) paddle2_accel += 2000;
+	if (is_down(BUTTON_DOWN)) paddle2_accel -= 2000;
+	// -----
+	// GET POSITION OF PADDLES
+	simulate_paddle(&paddle1_pos, &paddle1_speed, paddle1_accel, delta_time);
+	simulate_paddle(&paddle2_pos, &paddle2_speed, paddle2_accel, delta_time);
 
-		// some natural friction to paddles
-		paddle1_accel -= paddle1_speed * 10.f;
-		paddle2_accel -= paddle2_speed * 10.f;
-
-		//use equation of movement to find new position using derivative of position & derivative of derivative of position
-		paddle1_pos = paddle1_pos + paddle1_speed * delta_time + paddle1_accel * delta_time * delta_time * .5f;
-		paddle1_speed = paddle1_speed + paddle1_accel * delta_time;
-
-
-		paddle2_pos = paddle2_pos + paddle2_speed * delta_time + paddle2_accel * delta_time * delta_time * .5f;
-		paddle2_speed = paddle2_speed + paddle2_accel * delta_time;
-		// -----
-		// ADD COLLISION
-		// if paddles hit boundary, stop paddles
-		//Paddle 1
-		if (paddle1_pos + paddle_half_size_y > arena_half_size_y) {
-			paddle1_pos = arena_half_size_y - paddle_half_size_y;
-			paddle1_speed *= - wall_collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
-		}
-		else if (paddle1_pos - paddle_half_size_y < -arena_half_size_y) { // do colliison for going down as well
-			paddle1_pos = -arena_half_size_y + paddle_half_size_y;
-			paddle1_speed *= -wall_collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
-		}
-		//Paddle 2
-		if (paddle2_pos + paddle_half_size_y > arena_half_size_y) {
-			paddle2_pos = arena_half_size_y - paddle_half_size_y;
-			paddle2_speed *= -wall_collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
-		}
-		else if (paddle2_pos - paddle_half_size_y < -arena_half_size_y) { // do colliison for going down as well
-			paddle2_pos = -arena_half_size_y + paddle_half_size_y;
-			paddle2_speed *= -wall_collision_speed_modifier;// if collision happens, invert speed for bounce and slow down
-		}
-
-		//ball movement
+	//----
+	//SIMULATE BALL POSITION
+	{
 		ball_x_pos += ball_x_speed * delta_time;
 		ball_y_pos += ball_y_speed * delta_time;
 
-		//----
 		//BALL COLLISION
 		//check paddle 2 (right side)
 		if (in_paddle_range(2)) {
@@ -165,21 +158,22 @@ static void simulate_game(Input* input, float delta_time) {
 			ball_y_speed *= -1;
 		}
 
-		//if ball passes paddles
+		//if ball passes paddles reset game 
 		if (ball_x_pos + ball_half_size > arena_half_size_x) {//check if passed 2nd paddle
 			initialize_game(-1);
 		}
 		if (ball_x_pos - ball_half_size < -arena_half_size_x) {//check if passed 1st paddle
 			initialize_game();
 		}
+	}
 
+	//---
+	// RENDER OBJECTS ON SCREEN
 
-
-
-		draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
-		//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
-		//draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
-		draw_rect(-paddles_x_pos, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
-		draw_rect(paddles_x_pos, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+	draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
+	//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+	//draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+	draw_rect(-paddles_x_pos, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+	draw_rect(paddles_x_pos, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
 
  }
