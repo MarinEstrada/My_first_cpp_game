@@ -50,7 +50,7 @@ static void draw_rect(float x, float y, float half_size_x, float half_size_y, ui
 
 	int relative_to;
 
-	if (current_ratio > standard_widescreen) relative_to = render_state.height;
+	if (current_ratio >= standard_widescreen) relative_to = render_state.height;
 	else relative_to = render_state.width;
 
 
