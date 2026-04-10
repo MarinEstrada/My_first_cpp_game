@@ -13,6 +13,7 @@ float paddles_x_pos = 80.f;
 // change will be mainatined accross frames, v = derivative of position
 float initial_speed = 50.0f;
 float paddle1_speed, paddle2_speed, ball_x_speed = initial_speed, ball_y_speed;
+float max_ball_speed = 600.0f;
 //float movement_speed = 50.f; // units per second... need to make it units per frame (u/f = (u/s)*(s/f))
 
 float ball_half_size = 1.0f;
@@ -137,13 +138,17 @@ static void simulate_game(Input* input, float delta_time) {
 		//check paddle 2 (right side)
 		if (in_paddle_range(2)) {
 			ball_x_pos = paddles_x_pos - paddle_half_size_x - ball_half_size;
-			ball_x_speed *= -1 * speed_increase_modifier;
+			//ball_x_speed *= -1 * speed_increase_modifier;
+			if (ball_x_speed < max_ball_speed && ball_x_speed > -max_ball_speed) ball_x_speed *= -1 * speed_increase_modifier;
+			else ball_x_speed *= -1;
 			ball_y_speed = (ball_y_pos - paddle2_pos) * 3 + (paddle2_speed * paddle_contact_speed_modifier);
 		}
 		//check paddle 1 (left side)
 		if (in_paddle_range(1)) {
 			ball_x_pos = -paddles_x_pos + paddle_half_size_x + ball_half_size;
-			ball_x_speed *= -1 * speed_increase_modifier;
+			//ball_x_speed *= -1 * speed_increase_modifier;
+			if (ball_x_speed < max_ball_speed && ball_x_speed > -max_ball_speed) ball_x_speed *= -1 * speed_increase_modifier;
+			else ball_x_speed *= -1;
 			ball_y_speed = (ball_y_pos - paddle1_pos) * 3 + (paddle1_speed * paddle_contact_speed_modifier);
 
 		}
