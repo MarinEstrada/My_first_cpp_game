@@ -30,6 +30,9 @@ float speed_increase_modifier = 1.1;
 
 int player_1_score, player_2_score, max_score = 100;
 
+float player_accel_val = 2000.f;
+float bot_accel_val = 1200.f;
+
 //bool hit_roof_floor(int multiplier_val = 1) {
 //	
 //	if (ball_y_pos < arena_half_size_y ) return false;
@@ -119,12 +122,19 @@ static void simulate_game(Input* input, float delta_time) {
 	// GET BUTTON INPUTS
 	//is added to velocity the longer it is held, is derivative of velocit == derivative of deriviative of position
 	float paddle1_accel = 0.f;
-	if (is_down(BUTTON_W)) paddle1_accel += 2000;
-	if (is_down(BUTTON_S)) paddle1_accel -= 2000;
-
+#if 0
+	if (is_down(BUTTON_W)) paddle1_accel += player_accel_val;
+	if (is_down(BUTTON_S)) paddle1_accel -= player_accel_val;
+#else
+	//if (ball_y_pos > paddle1_pos + 2.f) paddle1_accel += bot_accel_val;
+	//if (ball_y_pos < paddle1_pos - 2.f) paddle1_accel -= bot_accel_val;
+	paddle1_accel = (ball_y_pos - paddle1_pos) * 100;
+	if (paddle1_accel > bot_accel_val) paddle1_accel = bot_accel_val;
+	if (paddle1_accel < -bot_accel_val) paddle1_accel = -bot_accel_val;
+#endif
 	float paddle2_accel = 0.f;
-	if (is_down(BUTTON_UP)) paddle2_accel += 2000;
-	if (is_down(BUTTON_DOWN)) paddle2_accel -= 2000;
+	if (is_down(BUTTON_UP)) paddle2_accel += player_accel_val;
+	if (is_down(BUTTON_DOWN)) paddle2_accel -= player_accel_val;
 	// -----
 	// GET POSITION OF PADDLES
 	simulate_paddle(&paddle1_pos, &paddle1_speed, paddle1_accel, delta_time);
