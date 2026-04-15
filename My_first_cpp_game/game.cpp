@@ -28,6 +28,8 @@ float wall_collision_speed_modifier = 0.30f;
 float paddle_contact_speed_modifier = 0.75f;
 float speed_increase_modifier = 1.1;
 
+int player_1_score, player_2_score, max_score = 100;
+
 //bool hit_roof_floor(int multiplier_val = 1) {
 //	
 //	if (ball_y_pos < arena_half_size_y ) return false;
@@ -165,15 +167,20 @@ static void simulate_game(Input* input, float delta_time) {
 
 		//if ball passes paddles reset game 
 		if (ball_x_pos + ball_half_size > arena_half_size_x) {//check if passed 2nd paddle
+			if (player_1_score < max_score) player_1_score++;
 			initialize_game(-1);
 		}
 		if (ball_x_pos - ball_half_size < -arena_half_size_x) {//check if passed 1st paddle
+			if (player_2_score < max_score) player_2_score++;
 			initialize_game();
 		}
 	}
 
 	//---
 	// RENDER OBJECTS ON SCREEN
+
+	draw_number(player_1_score, -10, 40, 1.f, 0xbbffbb);
+	draw_number(player_2_score, 10, 40, 1.f, 0xbbffbb);
 
 	draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
 	//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
