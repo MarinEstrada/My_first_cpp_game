@@ -125,7 +125,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 		// want to change status of input has changed to false because we only want input to last for a single frame
 		// (this allows to hold the button down for continous movement)
 		for (int i = 0; i < BUTTON_COUNT; i++) {
-
+			input.buttons[i].has_changed = false;
 		}
 
 		while (PeekMessage(&message, window, 0, 0, PM_REMOVE)) {
