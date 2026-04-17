@@ -28,7 +28,7 @@ float wall_collision_speed_modifier = 0.30f;
 float paddle_contact_speed_modifier = 0.75f;
 float speed_increase_modifier = 1.1;
 
-int player_1_score, player_2_score, max_score = 100;
+int player_1_score, player_2_score, score_to_win = 5, max_score = 100;
 
 float player_accel_val = 2000.f;
 float bot_accel_val = 1200.f;
@@ -109,93 +109,203 @@ static void simulate_paddle(float *position, float* speed, float accel, float de
 
 }
 
+enum Gamemode {
+	GM_MENU,
+	GM_GAMPLAY,
+};
+
+enum Player_mode {
+	PLAYER_PLAYER,
+	PLAYER_BOT,
+	BOT_PLAYER,
+
+	NUM_PLAYER_MODES
+};
+
+Gamemode current_gamemode = GM_MENU;
+//Gamemode current_gamemode = GM_GAMPLAY;
+//Player_mode current_playermode = PLAYER_PLAYER;
+Player_mode current_playermode;
+//Player_mode current_playermode = PLAYER_BOT;
+
+
 static void simulate_game(Input* input, float delta_time) {
 	//render_background();
 	clear_screen(0x00009f);
 	draw_rect(0, 0, arena_half_size_x, arena_half_size_y, 0xffaa33); //Arena
 
-	//// if shift button, increase speed, if ctrl, decrease speed.
-	//if (is_down(BUTTON_SHIFT)) movement_speed *= 1.5f;
-	//if (is_down(BUTTON_CTRL)) movement_speed *= 0.5f;
+	if (current_gamemode == GM_GAMPLAY) {
 
-	// -----
-	// GET BUTTON INPUTS
-	//is added to velocity the longer it is held, is derivative of velocit == derivative of deriviative of position
-	float paddle1_accel = 0.f;
-#if 0
-	if (is_down(BUTTON_W)) paddle1_accel += player_accel_val;
-	if (is_down(BUTTON_S)) paddle1_accel -= player_accel_val;
-#else
-	//if (ball_y_pos > paddle1_pos + 2.f) paddle1_accel += bot_accel_val;
-	//if (ball_y_pos < paddle1_pos - 2.f) paddle1_accel -= bot_accel_val;
-	paddle1_accel = (ball_y_pos - paddle1_pos) * 100;
-	if (paddle1_accel > bot_accel_val) paddle1_accel = bot_accel_val;
-	if (paddle1_accel < -bot_accel_val) paddle1_accel = -bot_accel_val;
-#endif
-	float paddle2_accel = 0.f;
-	if (is_down(BUTTON_UP)) paddle2_accel += player_accel_val;
-	if (is_down(BUTTON_DOWN)) paddle2_accel -= player_accel_val;
-	// -----
-	// GET POSITION OF PADDLES
-	simulate_paddle(&paddle1_pos, &paddle1_speed, paddle1_accel, delta_time);
-	simulate_paddle(&paddle2_pos, &paddle2_speed, paddle2_accel, delta_time);
+		//// if shift button, increase speed, if ctrl, decrease speed.
+		//if (is_down(BUTTON_SHIFT)) movement_speed *= 1.5f;
+		//if (is_down(BUTTON_CTRL)) movement_speed *= 0.5f;
 
-	//----
-	//SIMULATE BALL POSITION
-	{
-		ball_x_pos += ball_x_speed * delta_time;
-		ball_y_pos += ball_y_speed * delta_time;
-
-		//BALL COLLISION
-		//check paddle 2 (right side)
-		if (in_paddle_range(2)) {
-			ball_x_pos = paddles_x_pos - paddle_half_size_x - ball_half_size;
-			//ball_x_speed *= -1 * speed_increase_modifier;
-			if (ball_x_speed < max_ball_speed && ball_x_speed > -max_ball_speed) ball_x_speed *= -1 * speed_increase_modifier;
-			else ball_x_speed *= -1;
-			ball_y_speed = (ball_y_pos - paddle2_pos) * 3 + (paddle2_speed * paddle_contact_speed_modifier);
+		// -----
+		// GET BUTTON INPUTS
+		//is added to velocity the longer it is held, is derivative of velocit == derivative of deriviative of position
+		float paddle1_accel = 0.f;
+		if (current_playermode == BOT_PLAYER) {
+			//if (ball_y_pos > paddle1_pos + 2.f) paddle1_accel += bot_accel_val;
+			//if (ball_y_pos < paddle1_pos - 2.f) paddle1_accel -= bot_accel_val;
+			paddle1_accel = (ball_y_pos - paddle1_pos) * 100;
+			if (paddle1_accel > bot_accel_val) paddle1_accel = bot_accel_val;
+			if (paddle1_accel < -bot_accel_val) paddle1_accel = -bot_accel_val;
 		}
-		//check paddle 1 (left side)
-		if (in_paddle_range(1)) {
-			ball_x_pos = -paddles_x_pos + paddle_half_size_x + ball_half_size;
-			//ball_x_speed *= -1 * speed_increase_modifier;
-			if (ball_x_speed < max_ball_speed && ball_x_speed > -max_ball_speed) ball_x_speed *= -1 * speed_increase_modifier;
-			else ball_x_speed *= -1;
-			ball_y_speed = (ball_y_pos - paddle1_pos) * 3 + (paddle1_speed * paddle_contact_speed_modifier);
-
+		else {
+			if (is_down(BUTTON_W)) paddle1_accel += player_accel_val;
+			if (is_down(BUTTON_S)) paddle1_accel -= player_accel_val;
 		}
 
-		////if (hit_roof_floor())
-		if (ball_y_pos + ball_half_size > arena_half_size_y) {//check if hit roof
-			ball_y_pos = arena_half_size_y - ball_half_size;
-			ball_y_speed *= -1;
+		float paddle2_accel = 0.f;
+		if (current_playermode == PLAYER_BOT) {
+			paddle2_accel = (ball_y_pos - paddle2_pos) * 100;
+			if (paddle2_accel > bot_accel_val) paddle2_accel = bot_accel_val;
+			if (paddle2_accel < -bot_accel_val) paddle2_accel = -bot_accel_val;
 		}
-		if (ball_y_pos - ball_half_size < -arena_half_size_y) {//check if hit floor
-			ball_y_pos = -arena_half_size_y + ball_half_size;
-			ball_y_speed *= -1;
+		else {
+			if (is_down(BUTTON_UP)) paddle2_accel += player_accel_val;
+			if (is_down(BUTTON_DOWN)) paddle2_accel -= player_accel_val;
+		}
+		// -----
+		// GET POSITION OF PADDLES
+		simulate_paddle(&paddle1_pos, &paddle1_speed, paddle1_accel, delta_time);
+		simulate_paddle(&paddle2_pos, &paddle2_speed, paddle2_accel, delta_time);
+
+		//----
+		//SIMULATE BALL POSITION
+		{
+			ball_x_pos += ball_x_speed * delta_time;
+			ball_y_pos += ball_y_speed * delta_time;
+
+			//BALL COLLISION
+			//check paddle 2 (right side)
+			if (in_paddle_range(2)) {
+				ball_x_pos = paddles_x_pos - paddle_half_size_x - ball_half_size;
+				//ball_x_speed *= -1 * speed_increase_modifier;
+				if (ball_x_speed < max_ball_speed && ball_x_speed > -max_ball_speed) ball_x_speed *= -1 * speed_increase_modifier;
+				else ball_x_speed *= -1;
+				ball_y_speed = (ball_y_pos - paddle2_pos) * 3 + (paddle2_speed * paddle_contact_speed_modifier);
+			}
+			//check paddle 1 (left side)
+			if (in_paddle_range(1)) {
+				ball_x_pos = -paddles_x_pos + paddle_half_size_x + ball_half_size;
+				//ball_x_speed *= -1 * speed_increase_modifier;
+				if (ball_x_speed < max_ball_speed && ball_x_speed > -max_ball_speed) ball_x_speed *= -1 * speed_increase_modifier;
+				else ball_x_speed *= -1;
+				ball_y_speed = (ball_y_pos - paddle1_pos) * 3 + (paddle1_speed * paddle_contact_speed_modifier);
+
+			}
+
+			////if (hit_roof_floor())
+			if (ball_y_pos + ball_half_size > arena_half_size_y) {//check if hit roof
+				ball_y_pos = arena_half_size_y - ball_half_size;
+				ball_y_speed *= -1;
+			}
+			if (ball_y_pos - ball_half_size < -arena_half_size_y) {//check if hit floor
+				ball_y_pos = -arena_half_size_y + ball_half_size;
+				ball_y_speed *= -1;
+			}
+
+			//if ball passes paddles reset game 
+			if (ball_x_pos + ball_half_size > arena_half_size_x) {//check if passed 2nd paddle
+				if (player_1_score < max_score) player_1_score++;
+				initialize_game(-1);
+			}
+			if (ball_x_pos - ball_half_size < -arena_half_size_x) {//check if passed 1st paddle
+				if (player_2_score < max_score) player_2_score++;
+				initialize_game();
+			}
 		}
 
-		//if ball passes paddles reset game 
-		if (ball_x_pos + ball_half_size > arena_half_size_x) {//check if passed 2nd paddle
-			if (player_1_score < max_score) player_1_score++;
-			initialize_game(-1);
-		}
-		if (ball_x_pos - ball_half_size < -arena_half_size_x) {//check if passed 1st paddle
-			if (player_2_score < max_score) player_2_score++;
-			initialize_game();
-		}
+		//---
+		// RENDER OBJECTS ON SCREEN
+
+		draw_number(player_1_score, -10, 40, 1.f, 0xbbffbb);
+		draw_number(player_2_score, 10, 40, 1.f, 0xbbffbb);
+
+		draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
+		//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+		//draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+		draw_rect(-paddles_x_pos, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+		draw_rect(paddles_x_pos, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+
 	}
+	else {
+		float ln_height = 5.f;
+		float instructions_start_ln = arena_half_size_y - 20;
 
-	//---
-	// RENDER OBJECTS ON SCREEN
+		if (pressed(BUTTON_UP) && score_to_win < max_score) score_to_win++;
+		if (pressed(BUTTON_DOWN) && score_to_win > 1) score_to_win--;
+		//if (pressed(BUTTON_UP)) clamp(1, score_to_win + 1, max_score);
+		//if (pressed(BUTTON_DOWN)) clamp(1, score_to_win -1, max_score);
 
-	draw_number(player_1_score, -10, 40, 1.f, 0xbbffbb);
-	draw_number(player_2_score, 10, 40, 1.f, 0xbbffbb);
+		if (pressed(BUTTON_LEFT)) current_playermode = (Player_mode)((current_playermode > 0) ? ((current_playermode - 1) % NUM_PLAYER_MODES): 2);
+		if (pressed(BUTTON_RIGHT)) current_playermode = (Player_mode)((current_playermode + 1) % NUM_PLAYER_MODES);
 
-	draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
-	//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
-	//draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
-	draw_rect(-paddles_x_pos, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
-	draw_rect(paddles_x_pos, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+		const char* instructions[] = {
+			"Welcome to Pong!",
+			"Use the up and down arrow keys to select number of points to win.",
+			"Use the left and right arrow keys to select the game mode.",
+			"Hit enter to start!"
+		};
+
+		const char* control_instructions[] = {
+			"CONTROLS",
+			"Player 1: w/s",
+			"Player 2: up/down arrow keys"
+		};
+		
+		//draw_rect(0, 0, arena_half_size_x - 10, arena_half_size_y - 10, 0x990000);
+		draw_rect(0, 0, arena_half_size_x - 10, arena_half_size_y - 10, 0x660066);
+
+		int instruction_lns = sizeof(instructions) / sizeof(instructions[0]);
+		float current_ln = instructions_start_ln;
+		for (int ln = 0; ln < instruction_lns; ln++) {
+			draw_text(instructions[ln], -arena_half_size_x + 20, current_ln, 0xffffff);
+			current_ln -= ln_height;
+		}
+
+		int control_lns = sizeof(control_instructions) / sizeof(control_instructions[0]);
+		current_ln -= ln_height * 2;
+
+		for (int ln = 0; ln < control_lns; ln++) {
+			draw_text(control_instructions[ln], -arena_half_size_x + 20, current_ln, 0xffffff);
+			current_ln -= ln_height;
+		}
+
+		draw_text("Score to win:", 0, 0, 0xffffff);
+		draw_rect(25, 0, 5, 5, 0xffaa33);
+		draw_number(score_to_win, 27, 0, 1, 0xffffff);
+
+		draw_text("Player 1", 9, -11.5, 0xffffff);
+		draw_rect(15, -15, paddle_half_size_y /2 , paddle_half_size_x, 0x0000ff);
+		draw_text("Player 2", 29, -11.5, 0xffffff);
+		draw_rect(35, -15, paddle_half_size_y /2 , paddle_half_size_x, 0xff0000);
+
+		switch (current_playermode) {
+			case PLAYER_PLAYER: {
+				draw_text("Human", 10, -16, 0xffffff);
+				draw_text("Human", 30, -16, 0xffffff);
+				break;
+			}
+			case PLAYER_BOT: {
+				draw_text("Human", 10, -16, 0xffffff);
+				draw_text("Bot", 30, -16, 0xffffff);
+				break;
+			}
+			case BOT_PLAYER: {
+				draw_text("Bot", 10, -16, 0xffffff);
+				draw_text("Human", 30, -16, 0xffffff);
+				break;
+			}
+			default: {
+				break;
+			}
+		}
+
+
+		//draw_text("Welcome to Pong!", -arena_half_size_x + 20, arena_half_size_y - 20, 0xffffff);
+		//draw_text(instructions[1], -arena_half_size_x + 20, arena_half_size_y - 20- ln_height, 0xffffff);
+	}
 
  }
