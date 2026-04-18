@@ -2,6 +2,45 @@
 #define pressed(b) (input->buttons[b].is_down && input->buttons[b].has_changed)
 #define released(b) (!input->buttons[b].is_down && input->buttons[b].has_changed)
 
+enum Gamemode {
+	GM_MENU,
+	GM_GAMEPLAY,
+	GM_PAUSE,
+	GM_GAMEOVER
+};
+
+enum Player_mode {
+	PLAYER_PLAYER,
+	PLAYER_BOT,
+	BOT_PLAYER,
+
+	NUM_PLAYER_MODES
+};
+
+enum Pause_options {
+	PAUSE_RESUME_GM,
+	PAUSE_QUIT_GM,
+
+	NUM_PAUSE_OPTIONS
+};
+
+enum Gameover_options {
+	GAMEOVER_PLAYAGAIN,
+	GAMEOVER_MAINMENU,
+
+	NUM_GAMEOVER_OPTIONS
+};
+
+Gamemode current_gamemode = GM_MENU;
+//Gamemode current_gamemode = GM_GAMEPLAY;
+//Player_mode current_playermode = PLAYER_PLAYER;
+Player_mode current_playermode;
+
+Pause_options current_pause_select = PAUSE_RESUME_GM;
+Gameover_options current_gameover_select = GAMEOVER_PLAYAGAIN;
+
+//Player_mode current_playermode = PLAYER_BOT;
+
 //float player_pos = 0.f;
 float ball_x_pos = 0.f;
 float ball_y_pos = 0.f;
@@ -33,6 +72,7 @@ int player_1_score, player_2_score, score_to_win = 5, max_score = 100;
 float player_accel_val = 2000.f;
 float bot_accel_val = 1200.f;
 
+
 //bool hit_roof_floor(int multiplier_val = 1) {
 //	
 //	if (ball_y_pos < arena_half_size_y ) return false;
@@ -43,8 +83,7 @@ float bot_accel_val = 1200.f;
 
 static void initialize_ball(float x_speed_modifer = 1, float y_speed_modifer = 0) {
 	ball_x_pos = 0; 
-	ball_y_pos = 0;
-	ball_x_speed = initial_speed * x_speed_modifer;
+	ball_y_pos = 0; ball_x_speed = initial_speed * x_speed_modifer;
 	ball_y_speed = initial_speed * y_speed_modifer;
 }
 
@@ -52,6 +91,14 @@ static void initialize_game(float x_speed_modifer = 1, float y_speed_modifer = 0
 	paddle1_pos = 0;
 	paddle2_pos = 0;
 	initialize_ball(x_speed_modifer, y_speed_modifer);
+}
+
+static void reset_game(int new_score_to_win = 5, Player_mode new_playermode = PLAYER_PLAYER) {
+	player_1_score = 0;
+	player_2_score = 0;
+	score_to_win = new_score_to_win;
+	current_playermode = new_playermode;
+	initialize_game();
 }
 
 static bool in_paddle_range(int paddle_num) {
@@ -109,32 +156,31 @@ static void simulate_paddle(float *position, float* speed, float accel, float de
 
 }
 
-enum Gamemode {
-	GM_MENU,
-	GM_GAMPLAY,
-};
 
-enum Player_mode {
-	PLAYER_PLAYER,
-	PLAYER_BOT,
-	BOT_PLAYER,
+static void render_gameplay_frame() {
 
-	NUM_PLAYER_MODES
-};
+	draw_number(player_1_score, -10, 40, 1.f, 0xbbffbb);
+	draw_number(player_2_score, 10, 40, 1.f, 0xbbffbb);
 
-Gamemode current_gamemode = GM_MENU;
-//Gamemode current_gamemode = GM_GAMPLAY;
-//Player_mode current_playermode = PLAYER_PLAYER;
-Player_mode current_playermode;
-//Player_mode current_playermode = PLAYER_BOT;
+	draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
+	//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+	//draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+	draw_rect(-paddles_x_pos, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
+	draw_rect(paddles_x_pos, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
 
+}
 
 static void simulate_game(Input* input, float delta_time) {
 	//render_background();
 	clear_screen(0x00009f);
 	draw_rect(0, 0, arena_half_size_x, arena_half_size_y, 0xffaa33); //Arena
 
-	if (current_gamemode == GM_GAMPLAY) {
+	if (current_gamemode == GM_GAMEPLAY) {
+
+		if (pressed(BUTTON_ESC)) {
+			current_gamemode = GM_PAUSE;
+			current_pause_select = PAUSE_RESUME_GM;
+		}
 
 		//// if shift button, increase speed, if ctrl, decrease speed.
 		//if (is_down(BUTTON_SHIFT)) movement_speed *= 1.5f;
@@ -217,36 +263,126 @@ static void simulate_game(Input* input, float delta_time) {
 			}
 		}
 
+		if (player_1_score == score_to_win || player_2_score == score_to_win) current_gamemode = GM_GAMEOVER;
+
 		//---
 		// RENDER OBJECTS ON SCREEN
+		render_gameplay_frame();
 
-		draw_number(player_1_score, -10, 40, 1.f, 0xbbffbb);
-		draw_number(player_2_score, 10, 40, 1.f, 0xbbffbb);
+	}
+	else if (current_gamemode == GM_PAUSE) {
 
-		draw_rect(ball_x_pos, ball_y_pos, ball_half_size, ball_half_size, 0xa000a0); // player
-		//draw_rect(-80, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
-		//draw_rect(80, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
-		draw_rect(-paddles_x_pos, paddle1_pos, paddle_half_size_x, paddle_half_size_y, 0xff0000); // paddle 1
-		draw_rect(paddles_x_pos, paddle2_pos, paddle_half_size_x, paddle_half_size_y, 0x0000ff); // paddle 2
+		if (pressed(BUTTON_ESC)) current_gamemode = GM_GAMEPLAY;
+		if (pressed(BUTTON_ENTER)) {
+			if (current_pause_select == PAUSE_RESUME_GM) current_gamemode = GM_GAMEPLAY;
+			else if (current_pause_select == PAUSE_QUIT_GM) {
+				current_gamemode = GM_MENU;
+				reset_game(5, PLAYER_PLAYER);
+			}
+		}
 
+		if (pressed(BUTTON_DOWN)) current_pause_select = (Pause_options)((current_pause_select + 1) % NUM_PAUSE_OPTIONS);
+		if (pressed(BUTTON_UP)) current_pause_select = (Pause_options)((current_pause_select > 0) ? ((current_pause_select - 1) % NUM_PAUSE_OPTIONS) : NUM_PAUSE_OPTIONS - 1);
+
+		// -- draw frame
+		render_gameplay_frame();
+		draw_rect(0, 8, arena_half_size_x / 6, arena_half_size_y / 7, 0x660066);
+		switch (current_pause_select) {
+			case PAUSE_QUIT_GM: {
+				draw_text("     RESUME GAME", -10, 10, 0xffffff);
+				draw_text("-> QUIT GAME", -10, 5, 0xffffff);
+				break;
+			}
+			default: {
+				draw_text("-> RESUME GAME", -10, 10, 0xffffff);
+				draw_text("     QUIT GAME", -10, 5, 0xffffff);
+				break;
+			}
+		}
+
+	}
+	else if (current_gamemode == GM_GAMEOVER) {
+
+		if (pressed(BUTTON_ESC)) {
+			current_gamemode = GM_MENU;
+			reset_game(5, PLAYER_PLAYER);
+		}
+		if (pressed(BUTTON_ENTER)) {
+			if (current_gameover_select == GAMEOVER_PLAYAGAIN) {
+				current_gamemode = GM_GAMEPLAY;
+				reset_game(score_to_win, current_playermode);
+			}
+			else if (current_gameover_select == GAMEOVER_MAINMENU) {
+				current_gamemode = GM_MENU;
+				reset_game(5, PLAYER_PLAYER);
+			}
+		}
+
+		if (pressed(BUTTON_DOWN)) current_gameover_select = (Gameover_options)((current_gameover_select + 1) % NUM_GAMEOVER_OPTIONS);
+		if (pressed(BUTTON_UP)) current_gameover_select = (Gameover_options)((current_gameover_select > 0) ? ((current_gameover_select - 1) % NUM_GAMEOVER_OPTIONS) : NUM_GAMEOVER_OPTIONS - 1);
+
+		// -- draw frame
+		render_gameplay_frame();
+		draw_rect(0, 6, arena_half_size_x / 6, arena_half_size_y / 6, 0x660066);
+
+		switch (current_playermode) {
+			case PLAYER_PLAYER: {
+				if (player_1_score > player_2_score) draw_text("Player 1 Wins!!", -10, 10, 0xffffff);
+				else draw_text("Player 2 Wins!!", -10, 10, 0xffffff);
+				break;
+			}
+			case PLAYER_BOT: {
+				if (player_1_score > player_2_score) draw_text("Player 1 Wins!!", -10, 10, 0xffffff);
+				else draw_text("     Bot Wins!!", -10, 10, 0xffffff);
+				break;
+			}
+			case BOT_PLAYER: {
+				if (player_1_score > player_2_score) draw_text("     Bot Wins!!", -10, 10, 0xffffff);
+				else draw_text("Player 2 Wins!!", -10, 10, 0xffffff);
+				break;
+			}
+			default: {
+				break;
+			}
+		}
+
+		switch (current_gameover_select) {
+			case GAMEOVER_MAINMENU: {
+				draw_text("     PLAY AGAIN", -10, 5, 0xffffff);
+				draw_text("-> MAIN MENU", -10, 0, 0xffffff);
+				break;
+			}
+			default: {
+				draw_text("-> PLAY AGAIN", -10, 5, 0xffffff);
+				draw_text("     MAIN MENU", -10, 0, 0xffffff);
+				break;
+			}
+		}
 	}
 	else {
 		float ln_height = 5.f;
 		float instructions_start_ln = arena_half_size_y - 20;
+
+		if (pressed(BUTTON_ENTER)) current_gamemode = GM_GAMEPLAY;
+		//if (pressed(BUTTON_ENTER)) {
+		//	current_gamemode = GM_GAMEPLAY;
+		//	return;
+		//}
 
 		if (pressed(BUTTON_UP) && score_to_win < max_score) score_to_win++;
 		if (pressed(BUTTON_DOWN) && score_to_win > 1) score_to_win--;
 		//if (pressed(BUTTON_UP)) clamp(1, score_to_win + 1, max_score);
 		//if (pressed(BUTTON_DOWN)) clamp(1, score_to_win -1, max_score);
 
-		if (pressed(BUTTON_LEFT)) current_playermode = (Player_mode)((current_playermode > 0) ? ((current_playermode - 1) % NUM_PLAYER_MODES): 2);
+		if (pressed(BUTTON_LEFT)) current_playermode = (Player_mode)((current_playermode > 0) ? ((current_playermode - 1) % NUM_PLAYER_MODES): NUM_PLAYER_MODES - 1);
 		if (pressed(BUTTON_RIGHT)) current_playermode = (Player_mode)((current_playermode + 1) % NUM_PLAYER_MODES);
 
 		const char* instructions[] = {
 			"Welcome to Pong!",
 			"Use the up and down arrow keys to select number of points to win.",
 			"Use the left and right arrow keys to select the game mode.",
-			"Hit enter to start!"
+			"Hit the enter key to start!",
+			"Hit ESC to pause."
 		};
 
 		const char* control_instructions[] = {
