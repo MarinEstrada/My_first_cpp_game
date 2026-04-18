@@ -56,7 +56,7 @@ static void draw_text(const char* text, float screen_x, float screen_y, uint32 c
 
 	float standard_widescreen = 16.0f / 9.0f;
 	float current_ratio = (float)render_state.width / (float)render_state.height;
-	float relative_to = (current_ratio > standard_widescreen) ? render_state.height : render_state.width;
+	float relative_to = (current_ratio >= standard_widescreen) ? render_state.height : render_state.width;
 
 	float cursor_x = screen_x * relative_to * render_scale + render_state.width / 2.f;
 	float cursor_y = render_state.height - (screen_y * relative_to * render_scale + render_state.height / 2.f);
