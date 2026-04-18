@@ -79,7 +79,7 @@ static void main_loop() {
     // Blit pixel buffer to SDL texture then to screen
     SDL_UpdateTexture(texture, nullptr, render_state.memory, render_state.width * sizeof(uint32));
     SDL_RenderClear(sdl_renderer);
-    SDL_RenderCopy(sdl_renderer, texture, nullptr, nullptr);
+    SDL_RenderCopyEx(sdl_renderer, texture, nullptr, nullptr, 0.0, nullptr, SDL_FLIP_VERTICAL);
     SDL_RenderPresent(sdl_renderer);
 
     // Update delta time
