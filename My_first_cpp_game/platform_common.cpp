@@ -14,6 +14,9 @@ enum {
 	BUTTON_W,
 	BUTTON_S,
 
+	BUTTON_ENTER,
+	BUTTON_ESC,
+
 	BUTTON_COUNT,
 };
 
