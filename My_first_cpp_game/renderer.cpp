@@ -23,7 +23,11 @@ static bool font_loaded = false;
 
 static void load_font(const char* path, float pixel_height) {
 	FILE* f;
+#ifdef _WIN32
 	fopen_s(&f, path, "rb");
+#else
+	f = fopen(path, "rb");
+#endif
 	if (!f) return;
 
 	fseek(f, 0, SEEK_END);

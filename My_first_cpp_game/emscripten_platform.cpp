@@ -5,6 +5,8 @@
 #include "utils.cpp"
 #include <SDL2/SDL.h>
 #include <emscripten.h>
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
 #include <cstdlib>
 
 // ---- Render state (mirrors win32_platform.cpp, minus BITMAPINFO) ----
@@ -63,6 +65,8 @@ static void main_loop() {
                     process_button(BUTTON_CTRL,  SDLK_LCTRL);
                     process_button(BUTTON_W,     SDLK_w);
                     process_button(BUTTON_S,     SDLK_s);
+                    process_button(BUTTON_ENTER, SDLK_RETURN);
+                    process_button(BUTTON_ESC,   SDLK_ESCAPE);
                     default: break;
                 }
                 break;
@@ -111,6 +115,8 @@ int main() {
 
     performance_frequency = SDL_GetPerformanceFrequency();
     frame_begin_time      = SDL_GetPerformanceCounter();
+
+    load_font("PixelifySans-Regular.ttf", 24.f);
 
     // Use 0 fps = browser's requestAnimationFrame; 1 = simulate_infinite_loop
     emscripten_set_main_loop(main_loop, 0, 1);
