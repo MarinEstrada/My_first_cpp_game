@@ -6,6 +6,11 @@
 #include "utils.cpp"
 #include <windows.h>
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+//added to implement font
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
 
 static bool running = true;
 
@@ -94,6 +99,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 	HWND window = CreateWindow(window_class.lpszClassName, L"My First Game!", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, hInstance, 0);
 
 	HDC hdc = GetDC(window); // this is where we get the device context (ref windows use to draw to window)
+	//load_font("../arial.ttf", 24.f);
+	load_font("../PixelifySans-Regular.ttf", 24.f);
 
 	//input struct in platform_common file
 	Input input = {};
@@ -118,7 +125,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 		// want to change status of input has changed to false because we only want input to last for a single frame
 		// (this allows to hold the button down for continous movement)
 		for (int i = 0; i < BUTTON_COUNT; i++) {
-
+			input.buttons[i].has_changed = false;
 		}
 
 		while (PeekMessage(&message, window, 0, 0, PM_REMOVE)) {
@@ -139,6 +146,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,LPSTR lpCmdLine,
 						process_button(BUTTON_CTRL, VK_CONTROL);
 						process_button(BUTTON_W, 'W');
 						process_button(BUTTON_S, 'S');
+						process_button(BUTTON_ENTER, VK_RETURN);
+						process_button(BUTTON_ESC, VK_ESCAPE);
 
 						default: 
 							break;
